@@ -1,0 +1,23 @@
+# Entornos virtuales
+venv/
+env/
+.env
+
+# Archivos de Python
+*.py[cod]
+__pycache__/
+*.so
+
+# Logs y bases de datos
+*.log
+*.sqlite3
+
+# Carpetas específicas de IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
