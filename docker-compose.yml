@@ -1,0 +1,35 @@
+services:
+  bot_service:
+    build: ./bot_service
+    env_file: .env
+    depends_on:
+      - db
+    networks:
+      - bot_network
+
+  connector_service:
+    build: ./connector_service
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - bot_service
+    networks:
+      - bot_network
+
+  db:
+    image: postgres:16.4
+    environment:
+      POSTGRES_DB: expensebot
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bot_network
+
+networks:
+  bot_network:
+
+volumes:
+  postgres_data:
