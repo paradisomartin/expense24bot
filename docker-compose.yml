@@ -1,14 +1,19 @@
 services:
   bot_service:
     build: ./bot_service
+    volumes:
+      - ./bot_service:/app
     env_file: .env
-    depends_on:
-      - db
     networks:
       - bot_network
+    ports:
+      - "5001:5001"
 
   connector_service:
     build: ./connector_service
+    volumes:
+      - ./connector_service:/app
+      - /app/node_modules
     env_file: .env
     ports:
       - "3000:3000"
@@ -20,13 +25,18 @@ services:
   db:
     image: postgres:16.4
     environment:
-      POSTGRES_DB: expensebot
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - bot_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   bot_network:
