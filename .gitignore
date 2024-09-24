@@ -9,3 +9,4 @@ __pycache__/
 # Archivos de sistema operativo
 .DS_Store
 Thumbs.db
+/connector_service/node_modules

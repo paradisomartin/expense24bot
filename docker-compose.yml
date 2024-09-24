@@ -18,5 +18,14 @@ services:
     env_file:
       - .env
 
+  connector:
+    build: ./connector_service
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - web
+
 volumes:
   postgres_data:

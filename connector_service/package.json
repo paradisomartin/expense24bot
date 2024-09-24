@@ -1,0 +1,14 @@
+{
+    "name": "connector_service",
+    "version": "1.0.0",
+    "description": "Telegram bot connector service",
+    "main": "server.js",
+    "type": "module",
+    "scripts": {
+      "start": "node server.js"
+    },
+    "dependencies": {
+      "express": "^4.18.2",
+      "dotenv": "^16.0.3"
+    }
+  }
