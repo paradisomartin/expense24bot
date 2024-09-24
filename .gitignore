@@ -3,6 +3,8 @@ venv/
 env/
 .env
 .venv
+__pycache__/
+/__pycache__
 
 # Archivos de sistema operativo
 .DS_Store
