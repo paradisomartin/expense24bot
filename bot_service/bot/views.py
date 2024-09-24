@@ -22,7 +22,7 @@ class ProcessMessageView(APIView):
         
         prompt = PromptTemplate(
             input_variables=["message"],
-            template="Analiza si este mensaje describe un gasto. Si es así, extrae el monto y la categoría. No modifiques el texto original del gasto. Responde en español. Si no es un gasto, responde normalmente: {message}"
+            template="Analiza si este mensaje describe un gasto. Si es así, extrae el monto y la categoría. No modifiques el texto original del gasto. Si no es un gasto, responde 'No es un gasto'. Mensaje: {message}"
         )
         
         return LLMChain(llm=cohere, prompt=prompt)
@@ -38,9 +38,13 @@ class ProcessMessageView(APIView):
             return Response({"response": "Usuario no autorizado"}, status=403)
 
         llm_response = self.llm_chain.run(message)
-        bot_response = self.bot_service.process_message(telegram_id, message)  # Usa el mensaje original, no la respuesta del LLM
+        
+        if "No es un gasto" in llm_response:
+            return Response({"response": "Mensaje ignorado: no es un gasto"})
 
-        return Response({
-            "llm_response": llm_response.strip(),
-            "bot_response": bot_response.strip()
-        })
+        bot_response = self.bot_service.process_message(telegram_id, message)
+
+        if bot_response is None:
+            return Response({"response": "Mensaje ignorado: no se reconoció como gasto"})
+
+        return Response({"response": bot_response})

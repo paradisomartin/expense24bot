@@ -24,17 +24,29 @@ class BotService:
         """Verifica si el usuario está en la lista blanca."""
         return TelegramUser.objects.filter(telegram_id=telegram_id).exists()
 
+    def is_expense_message(self, message):
+        """Verifica si el mensaje parece ser un gasto."""
+        # Patrón para detectar un número seguido de una unidad monetaria
+        pattern = r'\d+(?:\.\d{1,2})?\s*(?:pesos|dólares?|usd|€|£|\$)'
+        return bool(re.search(pattern, message, re.IGNORECASE))
+
     def process_message(self, telegram_id, message):
         """Procesa el mensaje del usuario y añade el gasto si es válido."""
+        if not self.is_user_whitelisted(telegram_id):
+            return "Usuario no autorizado"
+
+        if not self.is_expense_message(message):
+            return None  # Ignoramos mensajes que no parecen ser gastos
+
         expense_info = self.parse_expense(message)
         if expense_info:
             return self.add_expense(telegram_id, expense_info)
         else:
-            return "Mensaje no reconocido como un gasto"
+            return None  # Si no se pudo parsear como gasto, lo ignoramos
 
     def parse_expense(self, message):
         """Extrae la información del gasto del mensaje."""
-        pattern = r"(.*?)\s+(\d+(?:\.\d{1,2})?)\s*(pesos|dólares?|usd)?$"
+        pattern = r'(.*?)\s+(\d+(?:\.\d{1,2})?)\s*(pesos|dólares?|usd|€|£|\$)?'
         match = re.match(pattern, message, re.IGNORECASE)
         if match:
             description = match.group(1).strip()
@@ -55,7 +67,7 @@ class BotService:
             category=category
         )
         
-        return f"Gasto de {category} añadido: {expense_info['amount']} {expense_info['currency']} ✅"
+        return f"{category} gasto añadido ✅"
 
     def categorize_expense(self, description):
         """Categoriza el gasto basándose en la descripción."""
