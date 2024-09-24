@@ -1,45 +1,26 @@
-services:
-  bot_service:
-    build: ./bot_service
-    volumes:
-      - ./bot_service:/app
-    env_file: .env
-    networks:
-      - bot_network
-    ports:
-      - "5001:5001"
+version: '3.8'
 
-  connector_service:
-    build: ./connector_service
+services:
+  web:
+    build: ./bot_service
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./connector_service:/app
-      - /app/node_modules
-    env_file: .env
+      - ./bot_service:/code
     ports:
-      - "3000:3000"
+      - "8000:8000"
+    env_file:
+      - .env
     depends_on:
-      - bot_service
-    networks:
-      - bot_network
+      - db
 
   db:
-    image: postgres:16.4
-    environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    image: postgres:15
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - bot_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-networks:
-  bot_network:
+    env_file:
+      - .env
 
 volumes:
   postgres_data:

@@ -1,0 +1,35 @@
+Verificación de requisitos según las instrucciones:
+
+1. Conexión a Telegram: ✅ Funciona correctamente a través del webhook en el connector_service.
+
+2. Envío de mensajes al backend (bot_service): ✅ Funciona correctamente. Los mensajes se envían desde el connector_service al bot_service.
+
+3. Respuesta del bot: ✅ El bot responde, aunque la lógica actual es simplemente repetir el mensaje.
+
+Pasos pendientes para cumplir con todos los requisitos:
+
+1. Implementar la lógica para reconocer usuarios en la lista blanca desde la base de datos.
+2. Desarrollar la verificación del contenido del mensaje para distinguir gastos de otros tipos de mensajes.
+3. Implementar la categorización automática de gastos.
+4. Modificar la respuesta del bot para que siga el formato "[Category] expense added ✅".
+5. Integrar LangChain con un LLM soportado en el bot_service.
+6. Configurar la conexión y operaciones con la base de datos PostgreSQL.
+7. Implementar el manejo de solicitudes concurrentes en el bot_service.
+
+Para avanzar, sugiero los siguientes pasos:
+
+1. Implementar la conexión a la base de datos PostgreSQL en el bot_service:
+   - Añadir SQLAlchemy a `requirements.txt`.
+   - Configurar la conexión a la base de datos en `main.py`.
+   - Crear los modelos para User y Expense.
+
+2. Implementar la lógica básica de verificación de usuarios y procesamiento de gastos:
+   - Verificar si el usuario está en la lista blanca.
+   - Analizar el mensaje para determinar si es un gasto.
+   - Extraer la información del gasto (monto, descripción).
+
+3. Integrar LangChain para la categorización de gastos:
+   - Añadir LangChain y las dependencias necesarias a `requirements.txt`.
+   - Implementar un clasificador simple usando LangChain para categorizar los gastos.
+
+4. Modificar la respuesta del bot para que siga el formato requerido.

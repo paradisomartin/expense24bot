@@ -2,21 +2,7 @@
 venv/
 env/
 .env
-
-# Archivos de Python
-*.py[cod]
-__pycache__/
-*.so
-
-# Logs y bases de datos
-*.log
-*.sqlite3
-
-# Carpetas específicas de IDEs
-.idea/
-.vscode/
-*.swp
-*.swo
+.venv
 
 # Archivos de sistema operativo
 .DS_Store
