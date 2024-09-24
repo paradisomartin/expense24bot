@@ -19,12 +19,12 @@ class ProcessMessageView(APIView):
             max_tokens=300,
             temperature=0.7
         )
-        
+
         prompt = PromptTemplate(
             input_variables=["message"],
-            template="Analiza si este mensaje describe un gasto. Si es así, extrae el monto y la categoría. No modifiques el texto original del gasto. Si no es un gasto, responde 'No es un gasto'. Mensaje: {message}"
+            template="Analiza si este mensaje describe un gasto o si es una solicitud para listar gastos. Si es un gasto, extrae el monto y la categoría. Si es una solicitud para listar gastos, identifícalo. No modifiques el texto original. Si no es ninguno de los anteriores, responde 'No es un gasto ni una solicitud de listar'. Mensaje: {message}"
         )
-        
+
         return LLMChain(llm=cohere, prompt=prompt)
 
     def post(self, request):
@@ -38,13 +38,15 @@ class ProcessMessageView(APIView):
             return Response({"response": "Usuario no autorizado"}, status=403)
 
         llm_response = self.llm_chain.run(message)
-        
-        if "No es un gasto" in llm_response:
-            return Response({"response": "Mensaje ignorado: no es un gasto"})
 
-        bot_response = self.bot_service.process_message(telegram_id, message)
+        if "listar gastos" in llm_response.lower():
+            bot_response = self.bot_service.list_expenses(telegram_id)
+        elif "No es un gasto ni una solicitud de listar" in llm_response:
+            return Response({"response": "Mensaje ignorado: no es un gasto ni una solicitud de listar"})
+        else:
+            bot_response = self.bot_service.process_message(telegram_id, message)
 
         if bot_response is None:
-            return Response({"response": "Mensaje ignorado: no se reconoció como gasto"})
+            return Response({"response": "Mensaje ignorado: no se reconoció como gasto o comando válido"})
 
         return Response({"response": bot_response})

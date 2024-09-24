@@ -1,5 +1,7 @@
 from bot.models import TelegramUser, Expense
 import re
+from django.db.models import Sum
+from datetime import datetime, timedelta
 
 class BotService:
     def __init__(self):
@@ -31,18 +33,20 @@ class BotService:
         return bool(re.search(pattern, message, re.IGNORECASE))
 
     def process_message(self, telegram_id, message):
-        """Procesa el mensaje del usuario y añade el gasto si es válido."""
+        """Procesa el mensaje del usuario."""
         if not self.is_user_whitelisted(telegram_id):
             return "Usuario no autorizado"
 
-        if not self.is_expense_message(message):
-            return None  # Ignoramos mensajes que no parecen ser gastos
+        if message.lower() in ["listar gastos", "listar expensas"]:
+            return self.list_expenses(telegram_id)
 
-        expense_info = self.parse_expense(message)
-        if expense_info:
-            return self.add_expense(telegram_id, expense_info)
-        else:
-            return None  # Si no se pudo parsear como gasto, lo ignoramos
+        if self.is_expense_message(message):
+            expense_info = self.parse_expense(message)
+            if expense_info:
+                return self.add_expense(telegram_id, expense_info)
+
+        return None  # Ignoramos mensajes que no son comandos ni gastos
+
 
     def parse_expense(self, message):
         """Extrae la información del gasto del mensaje."""
@@ -59,14 +63,14 @@ class BotService:
         """Añade el gasto a la base de datos."""
         user = TelegramUser.objects.get(telegram_id=telegram_id)
         category = self.categorize_expense(expense_info['description'])
-        
+
         Expense.objects.create(
             user=user,
             description=expense_info['description'],
             amount=expense_info['amount'],
             category=category
         )
-        
+
         return f"{category} gasto añadido ✅"
 
     def categorize_expense(self, description):
@@ -76,3 +80,26 @@ class BotService:
             if any(keyword in description_lower for keyword in keywords):
                 return category
         return "Otros"
+
+    def list_expenses(self, telegram_id, period='week'):
+        """Lista los gastos del usuario para un período dado."""
+        user = TelegramUser.objects.get(telegram_id=telegram_id)
+
+        if period == 'week':
+            start_date = datetime.now() - timedelta(days=7)
+        elif period == 'month':
+            start_date = datetime.now() - timedelta(days=30)
+        else:
+            return "Período no válido. Use 'week' o 'month'."
+
+        expenses = Expense.objects.filter(user=user, added_at__gte=start_date)
+
+        if not expenses:
+            return f"No se encontraron gastos en el último {period}."
+
+        total = expenses.aggregate(Sum('amount'))['amount__sum']
+
+        expense_list = [f"{e.description}: ${e.amount:.2f} ({e.category})" for e in expenses]
+        expense_str = "\n".join(expense_list)
+
+        return f"Gastos del último {period}:\n\n{expense_str}\n\nTotal: ${total:.2f}"
